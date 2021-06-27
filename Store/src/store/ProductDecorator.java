@@ -3,6 +3,9 @@ package store;
 import java.math.BigDecimal;
 
 public abstract class ProductDecorator implements Product {
+	// Klasa abstracyjna. Użycie wzorca Decorator. Implementuje interfejs Produkt
+	// Użyta dla modyfikacji produktów.
+	// Wszystkie "concrete" dekoratory, dziedziczące po tej klasie są w packeg'u "store.concrete.decorators"
 	private Product wrappee;
 	
 	public ProductDecorator(Product wrappee) {

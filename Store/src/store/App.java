@@ -10,15 +10,20 @@ import store.concrete.decorators.*;
 import store.exceptions.EmptyHistoryException;
 
 public class App {
-	private static Cart cart;
-	private static LinkedList<CartMemento> history; // I NEED QUEUEE, maybe i can use LinkedList (pop, push)
-	private static LinkedList<CartMemento> redoHistory;
-	private static ArrayList<Product> availableProducts;
-	private static Scanner scanner;
+	/*
+	 * Klasa którą można nazwać client
+	 * Używa innych klas, obiektów
+	 * Ma metodę main
+	 */
+	private static Cart cart; // koszyk z produktami użytkownika aplikacji
+	private static LinkedList<CartMemento> history; // historia koszyka, użyty wzorzec memento.
+	private static LinkedList<CartMemento> redoHistory; // historia przewrucen(undo) koszyka(żeby można było po udno zrobić redo), użyty wzorzec memento.
+	private static ArrayList<Product> availableProducts; // lista produktów, które można kupić
+	private static Scanner scanner; // scanner używany do odczytywania dancyh od użytkownika
 
 	public static void main(String[] args) {
-		prepare();
-		doMainLoop();
+		prepare(); // tworzą się obiekty, które używane w aplikacji (koszyk, listy, przedmioty do sprzedarzy...)
+		doMainLoop(); // działanie samej aplikacji
 	}
 	
 	private static void prepare() {
@@ -29,6 +34,7 @@ public class App {
 		redoHistory = new LinkedList<CartMemento>();
 		availableProducts = new ArrayList<Product>();
 		
+		// użycie wzorca FactoryMethod dla utworzenia produktów do sprzedaży
 		ArrayList<ProductCreator> productCreators = new ArrayList<ProductCreator>();
 		
 		productCreators.add(new CheapComputerCreator());
@@ -42,6 +48,7 @@ public class App {
 	}
 	
 	private static void doMainLoop() {
+		// Ta metoda odpowiada za główne "menu" aplikacji
 		int userInput;
 		boolean exit = false;
 		while(!exit) {
@@ -56,15 +63,15 @@ public class App {
 			
 			switch (userInput) {
 			case 1: {
-				doProductsListLoop();
+				doProductsListLoop(); // lista dostepnych produktow, udostepnia możliwość dodania do koszyka
 				break;
 			}
 			case 2: {
-				doCartLoop();
+				doCartLoop(); // koszyk, można sprawdzić produkty w koszyku
 				break;
 			}
 			case 3: {
-				exit = true;
+				exit = true; // koniec dzialania aplikacji(pętli)
 				break;
 			}
 			case 4: {
@@ -86,7 +93,8 @@ public class App {
 				break;
 			}
 			default:
-				throw new IllegalArgumentException("Unexpected value: " + userInput);
+				System.out.println("Nie poprawna wartość. Spróbuj jeszcze raz.");
+				break;
 			}
 		}
 		
@@ -94,6 +102,8 @@ public class App {
 	}
 	
 	private static void doProductsListLoop() {
+		// metoda która odpowiada za wyświetlanie dostępnych produktów. 
+		// użytkownik może wybrać jakiś produkt, żeby wejść w szczegóły
 		int userInput;
 		while(true) {
 			System.out.println("Wybierz produkt");
@@ -113,12 +123,16 @@ public class App {
 			}
 			
 			Product chosenProduct = availableProducts.get(userInput - 1); 
+			// Wejście do szczegółów produktu
+			// Użycie wzorca Prototyp, do klonowania obiektu
+			// Usuwa to możliwość zmiany produktu dostępnego. Zmieniamy tylko kopie.
 			doProductDetails(chosenProduct.clone());
 		}
 	}
 	
 	private static void doProductDetails(Product product)
 	{
+		// szczegóły produktu
 		int userInput = 0;
 
 		System.out.println("Nazwa produktu: " + product.getName());
@@ -134,7 +148,8 @@ public class App {
 			userInput = scanner.nextInt();
 			if (userInput == 0) return;
 		}
-			
+		
+		// Użycie wzorca dekorator, do modyfikacji produktów.
 		Product productSkonfigurowany = new SystemConfigurationDecorator(product);
 		
 		System.out.println("Czy chcesz żebyś my skonfigórowaliśmy system?");
@@ -157,13 +172,16 @@ public class App {
 		
 		if (userInput == 1) product = produktZabezpieczony;
 		
-		addToHistory();
-		cart.addProduct(product);
+		addToHistory(); // zapisywania danego stanu. Memento
+		cart.addProduct(product); // dodanie do koszyka
 		
 		System.out.println("Produkt został dodany do koszyka");
 	}
 	
 	private static void doCartLoop() {
+		// koszyk
+		// Pokazuje wszystkie produkty dodane do koszka.
+		// Możliwość wejść w szczegóły produktu.
 		int userInput;
 		ArrayList<Product> products = cart.getProducts();
 		while(true) {
@@ -184,7 +202,7 @@ public class App {
 			}
 			
 			Product chosenProduct = products.get(userInput - 1); 
-			doCartProductDetails(chosenProduct);
+			doCartProductDetails(chosenProduct); // szczegóły produktu z koszyka
 		}
 	}
 	
@@ -207,32 +225,36 @@ public class App {
 			
 		if (userInput == 1)
 		{
-			addToHistory();
-			cart.removeProduct(product);
+			addToHistory(); // Zapisanie do historii, Memento
+			cart.removeProduct(product); // usunięcie produktu z koszyka
+			System.out.println("Produkt został usunięty z koszyka");
 		}
-		System.out.println("Produkt został usunięty z koszyka");
 	}
 	
 	private static void addToHistory() {
-		redoHistory.clear();
-		history.push(cart.saveState());
+		// zapisywanie do historii koszyka, Memento
+		redoHistory.clear(); // wyczyszczamy historię redo, możliwość redo istnieje tylko po undo 
+		history.push(cart.saveState()); // saveState zwraca stan obiektu w danym momencie. Zapisujemy stan do historii
+		// Ograniczamy historie do 5, żeby nie zajmowała zbytnio miejsca
 		if (history.size() > 5) {
 			history.removeFirst();
 		}
 	}
 	
 	private static void undo() throws EmptyHistoryException {
-		if (history.size() < 1) throw new EmptyHistoryException();
-		// restore last cart state and add current state to redoHistory;
-		redoHistory.push(cart.saveState());
+		// przewrócenie koszyka do poprzedniego stanu, Memento
+		if (history.size() < 1) throw new EmptyHistoryException(); // jeżeli nic nie mamy w historii to wyrzucamy wyjątek
+
+		redoHistory.push(cart.saveState()); // zapisujemy stan przed przewróceniem do historii redo, żeby można było przywrócić
 		
-		CartMemento lastState = history.pop();
-		cart.restore(lastState);
+		CartMemento lastState = history.pop(); // wyciągamy z historii ostatni stan (został usunięty z historii)
+		cart.restore(lastState); // zapisujemy ten stan w koszyku
 	}
 	
 	private static void redo() throws EmptyHistoryException {
+		// Działą tak samo jak undo, tylko zamieniamy redoHistory i history
 		if (redoHistory.size() < 1) throw new EmptyHistoryException();
-		// restore last cart state and add current state to redoHistory;
+		
 		history.push(cart.saveState());
 		
 		CartMemento lastState = redoHistory.pop();
