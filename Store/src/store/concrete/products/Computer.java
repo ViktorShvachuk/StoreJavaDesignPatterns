@@ -21,7 +21,7 @@ public class Computer implements Product {
 		clone.sizeOfMemory = this.sizeOfMemory;
 		clone.memoryType = this.memoryType;
 		clone.price = this.price; // BigDecimal "immutable", więc nie muszę tworzyć kopię
-		return null;
+		return clone;
 	}
 
 	public String getProcessor() {

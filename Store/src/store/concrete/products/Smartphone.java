@@ -18,6 +18,7 @@ public class Smartphone implements Product {
 		clone.price = this.price;
 		clone.display = this.display;
 		clone.cameraMp = this.cameraMp;
+		clone.processor = this.processor;
 		return clone;
 	}
 
