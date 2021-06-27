@@ -55,9 +55,10 @@ public class App {
 			System.out.println("Wybierz jedną z opcji");
 			System.out.println("1 - Sprawdź dostępne produkty");
 			System.out.println("2 - Sprawdź swój koszyk");
-			System.out.println("3 - Zakończ");
+			System.out.println("3 - Kup");
 			System.out.println("4 - Udno");
 			System.out.println("5 - Redo");
+			System.out.println("6 - Zakończ");
 			
 			userInput = scanner.nextInt();
 			
@@ -71,7 +72,8 @@ public class App {
 				break;
 			}
 			case 3: {
-				exit = true; // koniec dzialania aplikacji(pętli)
+				System.out.println("Produkty zostaly zakupione na kwotę: " + cart.getPrice());
+				clearCart(); // wyczyszczenie koszyka i historii
 				break;
 			}
 			case 4: {
@@ -90,6 +92,10 @@ public class App {
 				} catch (EmptyHistoryException e) {
 					System.out.println("Nie udało się. Historia jest pusta.");
 				}
+				break;
+			}
+			case 6: {
+				exit = true; // koniec dzialania aplikacji(pętli)
 				break;
 			}
 			default:
@@ -229,6 +235,13 @@ public class App {
 			cart.removeProduct(product); // usunięcie produktu z koszyka
 			System.out.println("Produkt został usunięty z koszyka");
 		}
+	}
+	
+	private static void clearCart() // wyczyszczenie koszyka i historii
+	{
+		cart.clear();
+		history.clear();
+		redoHistory.clear();
 	}
 	
 	private static void addToHistory() {
